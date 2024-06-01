@@ -3,6 +3,7 @@
 
 
 
+.equ COM1,	0x3F8
 .equ STAGE2_BASE,	0x7E00
 
 
@@ -28,7 +29,43 @@ _start:
 	mov %ax, %sp
 	sti
 
-	mov $boot_drv, %bx
+	mov $boot_msg, %si
+	mov $boot_msg_size, %cx
+	call puts
+
+	jmp halt
+
+
+
+
+
+
+
+
+
+putc:
+	pusha
+
+	mov $COM1, %dx
+	out %al, %dx
+	
+	popa
+	ret
+
+puts:
+	pusha
+	mov $COM1, %dx
+
+_puts_loop:
+	lodsb
+	out %al, %dx
+	dec %cx
+	cmp $0, %cx
+	jne _puts_loop
+	
+_puts_done:
+	popa
+	ret
 
 halt:
 	cli
@@ -37,6 +74,12 @@ halt:
 
 boot_drv:
 	.byte 0x00
+
+
+boot_msg:
+	.asciz "\r\nHelixBoot v0.0.1\n"
+
+boot_msg_size = . - boot_msg
 
 
 .fill 510 - (. - _start), 1, 0
