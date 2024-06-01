@@ -9,15 +9,18 @@
 
 
 _start:
-	// Initialize segment registers
 	cli
 	cld
 
+	// Preserve drive number
+	mov %di, %ax
+	mov $boot_drv, %bx
+	mov %ax, 0(%bx)
+
+	// Initialize segment registers
 	xor %ax, %ax
 	mov %ax, %ds
 	mov %ax, %es
-	mov %ax, %gs
-	mov %ax, %fs
 	mov %ax, %ss
 
 	// Initialize stack and data segment
@@ -25,11 +28,15 @@ _start:
 	mov %ax, %sp
 	sti
 
+	mov $boot_drv, %bx
+
 halt:
 	cli
 	hlt
 	jmp halt
 
+boot_drv:
+	.byte 0x00
 
 
 .fill 510 - (. - _start), 1, 0
