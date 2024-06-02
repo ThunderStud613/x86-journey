@@ -32,7 +32,7 @@ _start:
 	call stage2_load
 
 	// Jump to stage2 bootloader
-	//jmp 0x7E00
+	jmp 0x7E00
 
 boot_fail:
 	// If we reach here assume somthing got fucked
@@ -63,7 +63,7 @@ stage2_load:
 	push %dx
 
 	mov $0x02, %ah	/* Read function */
-	mov $0x01, %al	/* Number of sectors to read */
+	mov $0x04, %al	/* Number of sectors to read */
 	mov $0x00, %ch	/* Cylinder */
 	mov $0x02, %cl	/* Sector */
 	mov $0x00, %dh	/* Head */
