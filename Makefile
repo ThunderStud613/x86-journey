@@ -27,8 +27,16 @@ STAGE0_TARGET	:= $(LOCAL_PATH)/boot0
 
 STAGE1_TARGET	:= $(LOCAL_PATH)/boot1
 
+BOOT_IMG		:= $(LOCAL_PATH)/helix_boot
+
+
+
 STAGE0_OBJS		:= \
-					   $(LOCAL_PATH)/stage0/boot_sect.o
+				   $(LOCAL_PATH)/stage0/boot_sect.o
+
+STAGE1_OBJS		:= \
+				   $(LOCAL_PATH)/stage1/start.o \
+				   $(LOCAL_PATH)/stage1/main.o
 
 
 
@@ -37,13 +45,17 @@ STAGE0_OBJS		:= \
 
 
 .PHONY: all
-all: clean $(STAGE0_OBJS) $(STAGE0_TARGET)
+all: clean $(STAGE0_OBJS) $(STAGE0_TARGET) $(STAGE1_OBJS) $(STAGE1_TARGET)
 
 
 
 
 $(STAGE0_TARGET): $(STAGE0_OBJS)
 	@$(LD) $^ $(STAGE0_LDFLAGS) -o $@.bin
+
+$(STAGE1_TARGET): $(STAGE1_OBJS)
+	@$(LD) $^ $(STAGE1_LDFLAGS) -o $@.elf
+	@$(OBJCOPY) -O binary $@.elf $@.bin
 
 
 .s.o:
@@ -56,8 +68,9 @@ $(STAGE0_TARGET): $(STAGE0_OBJS)
 
 
 install:
+	@cat $(STAGE0_TARGET).bin $(STAGE1_TARGET).bin > $(BOOT_IMG).bin
 	@dd if=/dev/zero of=floppy.img bs=1024 count=1440 >/dev/null 2>&1
-	@dd if=$(STAGE0_TARGET).bin of=floppy.img bs=512 conv=notrunc >/dev/null 2>&1
+	@dd if=$(BOOT_IMG).bin of=floppy.img bs=512 conv=notrunc >/dev/null 2>&1
 
 
 run:
