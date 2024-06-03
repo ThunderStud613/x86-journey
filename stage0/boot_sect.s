@@ -63,7 +63,7 @@ stage2_load:
 	push %dx
 
 	mov $0x02, %ah	/* Read function */
-	mov $0x04, %al	/* Number of sectors to read */
+	mov $16, %al	/* Number of sectors to read */
 	mov $0x00, %ch	/* Cylinder */
 	mov $0x02, %cl	/* Sector */
 	mov $0x00, %dh	/* Head */
@@ -86,7 +86,7 @@ stage2_load:
 stage2_err:
 	mov $disk_err, %si
 	mov $disk_err_size, %cx
-	jmp puts
+	call puts
 
 	jmp halt
 
