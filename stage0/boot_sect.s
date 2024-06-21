@@ -6,34 +6,34 @@
 
 _start:
     jmp main
+    nop
 
 
-/* BIOS parameter block taken from:
+/* BIOS parameter block based off:
  * https://github.com/lattera/freebsd/blob/master/sys/boot/i386/boot2/boot1.S
  */
 
 .org 0x03, 0x00
-start_bpb:
-    .byte 0x48, 0x42, 0x4f, 0x4f, 0x54, 0x20, 0x20, 0x20
-    .word 512       /* Bytes per sector */
-    .byte 1 		/* Sectors per cluster */
-	.word 1	    	/* Number of sectors */
-	.byte 2		    /* Number of FATS */
-	.word 224	    /* Root entries */
-	.word 2880	    /* Small sectors */
-	.byte 0xF0	    /* Media type */
-	.word 9		    /* Sectors per FAT */
-	.word 18		/* Sectors per track */
-	.word 2		    /* Number of heads */
-	.long 0		    /* Hidden sectors */
-	.long 0		    /* Large sectors */
-    .byte 0         /* Drive number */
-    .byte 0         /* Unused */
-    .byte 0x29      /* Boot signature */
-    .word 0         /* Serial number */
-    .byte 0x48, 0x65, 0x6c, 0x69, 0x78, 0x4f, 0x53, 0x20, 0x20, 0x20, 0x20
-    .byte 0x46, 0x41, 0x54, 0x31, 0x32  /* FS type */
-end_bpb:
+oemid:          .ascii "HBOOT   "
+bytes_per_sect: .word 512
+sect_per_clust: .byte 1
+num_sect:       .word 1
+num_fats:       .byte 2	
+num_root_ents:  .word 224
+num_small_sect: .word 2880
+drive_type:     .byte 0xF0
+sect_per_fat:   .word 9
+sect_per_track: .word 18
+num_heads:      .word 2
+hidden_sect:    .long 0
+large_sect:     .long 0
+                .byte 0
+boot_sig:       .byte 0x29
+serial_number:  .word 0
+volume_label:   .ascii "HelixBoot  "
+fstype:         .ascii "FAT12   "
+
+
 
 
 
@@ -53,42 +53,13 @@ main:
 	mov %ax, %sp
 	sti
 
-	// Load stage2
-	call stage2_load
+    
 
 	// Jump to stage2 bootloader
-	jmp 0x7E00
+	//jmp 0x7E00
 
 boot_fail:
-	// If we reach here assume somthing got fucked
-	// up and halt the system
 	jmp halt
-
-
-
-stage2_load:
-	pusha
-	push %dx
-
-	mov $0x02, %ah	/* Read function */
-	mov $4, %al	    /* Number of sectors to read */
-	mov $0x00, %ch	/* Cylinder */
-	mov $0x02, %cl	/* Sector */
-	mov $0x00, %dh	/* Head */
-	mov $0x00, %dl	/* Drive number */
-
-	// Read to 0x7E00
-	movw $0x0000, %bx
-	mov %bx, %es
-	movw $0x7E00, %bx 
-
-	// Read sector
-	int $0x13
-	jc halt
-
-	pop %dx
-	popa
-	ret
 
 
 halt:
@@ -96,6 +67,8 @@ halt:
 	hlt
 	jmp halt
 
+stage2:
+    .ascii "helix_boot bin"
 
 
 .fill 510 - (. - _start), 1, 0
