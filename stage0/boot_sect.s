@@ -1,14 +1,43 @@
 .code16
+.org 0x00, 0x00
 .global _start
 
 
 
-.equ COM1,	0x3F8
-.equ STAGE2_BASE,	0x7E00
-
-
-
 _start:
+    jmp main
+
+
+/* BIOS parameter block taken from:
+ * https://github.com/lattera/freebsd/blob/master/sys/boot/i386/boot2/boot1.S
+ */
+
+.org 0x03, 0x00
+start_bpb:
+    .byte 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41
+    .word 512       /* Bytes per sector */
+    .byte 1 		/* Sectors per cluster */
+	.word 1	    	/* Number of sectors */
+	.byte 2		    /* Number of FATS */
+	.word 224	    /* Root entries */
+	.word 2880	    /* Small sectors */
+	.byte 0xF0	    /* Media type */
+	.word 9		    /* Sectors per FAT */
+	.word 18		/* Sectors per track */
+	.word 2		    /* Number of heads */
+	.long 0		    /* Hidden sectors */
+	.long 0		    /* Large sectors */
+    .byte 0         /* Drive number */ 
+    .byte 0         /* Unused */
+    .word 0         /* Serial number */
+    .byte 0         /* Label */
+    .byte 0x46, 0x41, 0x54, 0x31, 0x32  /* FS type */
+end_bpb:
+
+
+
+
+main:
 	cli
 	cld
 
@@ -23,11 +52,6 @@ _start:
 	mov %ax, %sp
 	sti
 
-	// Print boot message
-	mov $boot_msg, %si
-	mov $boot_msg_size, %cx
-	call puts
-
 	// Load stage2
 	call stage2_load
 
@@ -41,29 +65,12 @@ boot_fail:
 
 
 
-
-puts:
-	pusha
-	mov $COM1, %dx
-
-_puts_loop:
-	lodsb
-	out %al, %dx
-	dec %cx
-	cmp $0, %cx
-	jne _puts_loop
-	
-_puts_done:
-	popa
-	ret
-
-
 stage2_load:
 	pusha
 	push %dx
 
 	mov $0x02, %ah	/* Read function */
-	mov $16, %al	/* Number of sectors to read */
+	mov $4, %al	    /* Number of sectors to read */
 	mov $0x00, %ch	/* Cylinder */
 	mov $0x02, %cl	/* Sector */
 	mov $0x00, %dh	/* Head */
@@ -72,23 +79,15 @@ stage2_load:
 	// Read to 0x7E00
 	movw $0x0000, %bx
 	mov %bx, %es
-	movw $0x7E00, %bx
+	movw $0x7E00, %bx 
 
 	// Read sector
 	int $0x13
-	jc stage2_err
+	jc halt
 
 	pop %dx
 	popa
 	ret
-
-
-stage2_err:
-	mov $disk_err, %si
-	mov $disk_err_size, %cx
-	call puts
-
-	jmp halt
 
 
 halt:
@@ -96,17 +95,6 @@ halt:
 	hlt
 	jmp halt
 
-
-
-boot_msg:
-	.asciz "\r\nHelixBoot v0.0.1\n"
-
-boot_msg_size = . - boot_msg
-
-disk_err:
-	.asciz "\r\nDisk error!\n"
-
-disk_err_size = . - disk_err
 
 
 .fill 510 - (. - _start), 1, 0
