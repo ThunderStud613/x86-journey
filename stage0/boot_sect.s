@@ -14,7 +14,7 @@ _start:
 
 .org 0x03, 0x00
 start_bpb:
-    .byte 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41
+    .byte 0x48, 0x42, 0x4f, 0x4f, 0x54, 0x20, 0x20, 0x20
     .word 512       /* Bytes per sector */
     .byte 1 		/* Sectors per cluster */
 	.word 1	    	/* Number of sectors */
@@ -27,10 +27,11 @@ start_bpb:
 	.word 2		    /* Number of heads */
 	.long 0		    /* Hidden sectors */
 	.long 0		    /* Large sectors */
-    .byte 0         /* Drive number */ 
+    .byte 0         /* Drive number */
     .byte 0         /* Unused */
+    .byte 0x29      /* Boot signature */
     .word 0         /* Serial number */
-    .byte 0         /* Label */
+    .byte 0x48, 0x65, 0x6c, 0x69, 0x78, 0x4f, 0x53, 0x20, 0x20, 0x20, 0x20
     .byte 0x46, 0x41, 0x54, 0x31, 0x32  /* FS type */
 end_bpb:
 
